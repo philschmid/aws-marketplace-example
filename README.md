@@ -88,6 +88,18 @@ if (regToken):
 * Connect existing Account with AWS Marketplace Customer ID (set `canPay` true and save customer information)
 * have a mix between "existing landing page" or "connect". If the customer is not having an account, create a regular one and then connect. 
 
+
+## Tasks 
+
+* [ ] Create a new landing page for SaaS registration, which can register via API, e.g. Hugging Face
+  * [ ] edge function to resolve customer information
+  * [ ] API to create or connect external accounts
+  * [ ] demo dynamodb save
+* [ ] SQS queue to handle sns notifications with Lambda to react to subscription changes
+  * [ ] demo dynamodb update
+* [ ] test and playaround on how it could work when registration is broken
+
+
 ## Resources 
 
 * [AWS Marketplace SaaS Listing Process & Integration Guide](https://awsmp-loadforms.s3.amazonaws.com/AWS+Marketplace+-+SaaS+Integration+Guide.pdf)
