@@ -1,5 +1,7 @@
 # AWS Example: for Saas Product for AWS Marketplace
 
+![overview](assets/overview.png)
+
 ## Steps to create a SaaS product for AWS Marketplace
 
 1. Decide to list a SaaS product
@@ -90,3 +92,4 @@ if (regToken):
 
 * [AWS Marketplace SaaS Listing Process & Integration Guide](https://awsmp-loadforms.s3.amazonaws.com/AWS+Marketplace+-+SaaS+Integration+Guide.pdf)
 * [Code examples for SaaS product integration](https://docs.aws.amazon.com/marketplace/latest/userguide/saas-code-examples.html)
+* [AWS Marketplace - Serverless integration for SaaS products (Example)](https://github.com/aws-samples/aws-marketplace-serverless-saas-integration)
