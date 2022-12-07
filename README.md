@@ -95,8 +95,11 @@ if (regToken):
   * [ ] edge function to resolve customer information
   * [ ] API to create or connect external accounts
   * [ ] demo dynamodb save
-* [ ] SQS queue to handle sns notifications with Lambda to react to subscription changes
-  * [ ] demo dynamodb update
+* [ ] Infrastructure
+  * [ ] need PRODUCT CODE and SNS ARN to subscribe
+  * [x] 3 lambda functions for resolving customer, sns subscriber and usage tracker
+  * [x] sqs queue to handle sns notifications with Lambda to react to subscription changes
+  * [ ] test table to store customer information
 * [ ] test and playaround on how it could work when registration is broken
 
 
