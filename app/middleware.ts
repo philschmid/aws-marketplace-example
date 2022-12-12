@@ -19,13 +19,15 @@ export default withAuth(
   }
 )
 
-export const config = { matcher: [
-  /*
-   * Match all request paths except for the ones starting with:
-   * - api (API routes)
-   * - _next/static (static files)
-   * - favicon.ico (favicon file)
-   * - auth (auth routes) for signin
-   */
-  '/((?!api|_next/static|favicon.ico|auth|static).*)',
-], }
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - favicon.ico (favicon file)
+     * - auth (auth routes) for signin
+     */
+    '/((?!api|_next/static|favicon.ico|auth|static).*)',
+  ],
+}
