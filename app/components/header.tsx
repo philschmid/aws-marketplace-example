@@ -8,7 +8,7 @@ export const Header = () => {
     <header>
       <nav className="border-b-2 border-gray-100 dark:border-gray-800 px-4 lg:px-6 py-2.5 flex flex-row justify-between w-full">
         <a href="" className="flex items- justify-center">
-          <Image src={''} className="h-8 w-8 mr-4 my-auto" />
+          <Image src={''} className="h-8 w-8 mr-4 my-auto" alt='logo' />
           <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Logo</span>
         </a>
         <div >
