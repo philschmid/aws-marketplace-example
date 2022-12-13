@@ -5,6 +5,7 @@ declare namespace NodeJS {
     NEXTAUTH_SECRET: string
     GITHUB_ID: string
     GITHUB_SECRET: string
+    // GITHUB_ACCESS_TOKEN: string
     // FACEBOOK_ID: string
     // FACEBOOK_SECRET: string
     // TWITTER_ID: string

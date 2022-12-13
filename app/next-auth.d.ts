@@ -16,10 +16,18 @@ declare module "next-auth/jwt" {
     jti: string
   }
 }
+interface User {
+  name: string
+  email: string
+  id: string
+  image?: string
+  login?: string
+}
 
 declare module "next-auth" {
   interface Session {
     accessToken: string
     sub: string
+    user: User
   }
 }
