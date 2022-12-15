@@ -3,6 +3,9 @@ declare namespace NodeJS {
   export interface ProcessEnv {
     NEXTAUTH_URL: string
     NEXTAUTH_SECRET: string
+    NEXT_AUTH_AWS_REGION: string
+    NEXT_AUTH_AWS_ACCESS_KEY: string
+    NEXT_AUTH_AWS_SECRET_KEY: string
     GITHUB_ID: string
     GITHUB_SECRET: string
     // GITHUB_ACCESS_TOKEN: string

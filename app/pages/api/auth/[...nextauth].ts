@@ -1,6 +1,22 @@
 import NextAuth from "next-auth"
 import GithubProvider from "next-auth/providers/github"
+import Providers from "next-auth/providers";
 import type { NextAuthOptions } from 'next-auth'
+import { DynamoDB, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb"
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"
+import { DynamoDBAdapter } from "@next-auth/dynamodb-adapter"
+
+const config: DynamoDBClientConfig = {
+  region: "us-east-1",
+};
+
+const client = DynamoDBDocument.from(new DynamoDB(config), {
+  marshallOptions: {
+    convertEmptyValues: true,
+    removeUndefinedValues: true,
+    convertClassInstanceToMap: true,
+  },
+})
 
 export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
@@ -19,6 +35,9 @@ export const authOptions: NextAuthOptions = {
     }}),
     // ...add more providers here
   ],
+  adapter: DynamoDBAdapter(
+    client
+  ),
   callbacks: {
     // used to check if a user is allowed to sign in
     // async signIn(props) {

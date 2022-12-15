@@ -4,6 +4,7 @@ import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as amplify from '@aws-cdk/aws-amplify-alpha';
 import { CfnOutput, SecretValue } from 'aws-cdk-lib';
 import * as cr from 'aws-cdk-lib/custom-resources'
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
 import { CfnBranch } from 'aws-cdk-lib/aws-amplify'
 
 
@@ -132,6 +133,21 @@ export class AmplifyNextJsStack extends cdk.Stack {
       domain.mapSubDomain(main, 'www');
       // domain.mapSubDomain(dev); // sub domain prefix defaults to branch name
     }
+
+    // User Table
+    const table = new dynamodb.Table(this, `NextAuthTable`, {
+      tableName: `${props.name}-user-table`,
+      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+      timeToLiveAttribute: "expires",
+    }).addGlobalSecondaryIndex({
+      indexName: "GSI1",
+      partitionKey: { name: "GSI1PK", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "GSI1SK", type: dynamodb.AttributeType.STRING },
+    })
+    
+    
+
 
     // Outpus
     new CfnOutput(this, 'appId', {
