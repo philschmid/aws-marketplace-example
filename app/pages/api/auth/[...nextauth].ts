@@ -1,13 +1,16 @@
 import NextAuth from "next-auth"
 import GithubProvider from "next-auth/providers/github"
-import Providers from "next-auth/providers";
 import type { NextAuthOptions } from 'next-auth'
 import { DynamoDB, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb"
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"
 import { DynamoDBAdapter } from "@next-auth/dynamodb-adapter"
 
 const config: DynamoDBClientConfig = {
-  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.NEXT_AUTH_AWS_ACCESS_KEY as string,
+    secretAccessKey: process.env.NEXT_AUTH_AWS_SECRET_KEY as string,
+  },
+  region: process.env.NEXT_AUTH_AWS_REGION,
 };
 
 const client = DynamoDBDocument.from(new DynamoDB(config), {
@@ -31,20 +34,23 @@ export const authOptions: NextAuthOptions = {
           name: profile.name,
           email: profile.email,
           image: profile.avatar_url,
-        }
+          }
     }}),
     // ...add more providers here
   ],
+  session: {
+    strategy: "jwt",
+  },
   adapter: DynamoDBAdapter(
-    client
+    client,
+    {tableName: process.env.NEXT_AUTH_DYNAMODB_TABLE}
   ),
   callbacks: {
     // used to check if a user is allowed to sign in
     // async signIn(props) {
     // },
     async jwt({ token, account, profile, isNewUser }) {
-      // Persist the OAuth access_token to the token right after signin
-      if (account && account.access_token) {
+       if (account && account.access_token) {
         token.accessToken = account.access_token
       }
       // @ts-ignore
@@ -52,17 +58,16 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         token.id = profile.id
       }
-
       return token
     },
     async session({ session, token, user }) {
-      // Send properties to the client, like an access_token from a provider.
       session.accessToken = token.accessToken
       // @ts-ignore
       session.user.id = token.id
       return session
     }
   },
+  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: '/auth/signIn',
     // signOut: '/auth/signout',

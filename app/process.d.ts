@@ -6,6 +6,7 @@ declare namespace NodeJS {
     NEXT_AUTH_AWS_REGION: string
     NEXT_AUTH_AWS_ACCESS_KEY: string
     NEXT_AUTH_AWS_SECRET_KEY: string
+    NEXT_AUTH_DYNAMODB_TABLE: string
     GITHUB_ID: string
     GITHUB_SECRET: string
     // GITHUB_ACCESS_TOKEN: string

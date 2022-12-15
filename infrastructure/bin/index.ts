@@ -5,8 +5,6 @@ import { MarketplaceStack, MarketplaceStackProps } from '../lib/marketplaceStack
 import { AmplifyNextJsStack, AmplifyNextJsStackProps } from '../lib/amplifyNextJsStack';
 import config from '../config'
 
-console.log(config)
-
 const props: MarketplaceStackProps = {
   name: 'marketplace-test',
   marketplaceSnsTopic: 'arn:aws:sns:us-east-1:123456789012:MarketplaceTopic',
