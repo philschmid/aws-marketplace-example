@@ -91,15 +91,15 @@ if (regToken):
 
 ## Tasks 
 
-* [ ] Create a new landing page for SaaS registration, which can register via API, e.g. Hugging Face
+* [x] Create a new landing page for SaaS registration, which can register via API, e.g. Hugging Face
+  * [x] demo dynamodb save
   * [ ] edge function to resolve customer information
-  * [ ] API to create or connect external accounts
-  * [ ] demo dynamodb save
+  * [x] API to create or connect external accounts
 * [ ] Infrastructure
   * [ ] need PRODUCT CODE and SNS ARN to subscribe
   * [x] 3 lambda functions for resolving customer, sns subscriber and usage tracker
   * [x] sqs queue to handle sns notifications with Lambda to react to subscription changes
-  * [ ] test table to store customer information
+  * [x] test table to store customer information
 * [ ] test and playaround on how it could work when registration is broken
 
 

@@ -6,10 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier --ignore-path .gitignore \"**/*.+(ts|js|tsx)\" --write"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.231.0",
+    "@aws-sdk/client-marketplace-metering": "^3.231.0",
     "@heroicons/react": "^2.0.13",
     "@next-auth/dynamodb-adapter": "^1.0.5",
     "@types/node": "18.11.13",
@@ -26,7 +28,9 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.13",
+    "eslint-config-prettier": "^8.5.0",
     "postcss": "^8.4.20",
+    "prettier": "^2.8.1",
     "tailwindcss": "^3.2.4"
   }
 }

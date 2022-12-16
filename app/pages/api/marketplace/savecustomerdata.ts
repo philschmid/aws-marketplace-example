@@ -1,36 +1,95 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { unstable_getServerSession } from "next-auth/next"
-import type { NextApiRequest, NextApiResponse } from "next"
-import { authOptions } from "../auth/[...nextauth]"
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { getToken } from 'next-auth/jwt';
+import {
+  DynamoDB,
+  DynamoDBClientConfig,
+  GetItemCommandInput,
+  PutItemCommandInput,
+  QueryCommand,
+  QueryCommandInput,
+  UpdateItemCommand,
+  UpdateItemInput,
+} from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { config } from '../../../lib/dynamoDb';
 
-type Data = {
-  ProductCode: string
-  CustomerIdentifier: string
-  CustomerAWSAccountId: string
-  error?: string
-}
+const ddbClient = new DynamoDB(config);
+
+type marketplaceData = {
+  ProductCode: string;
+  CustomerIdentifier: string;
+  CustomerAWSAccountId: string;
+};
+type userDataWithMarketplace = marketplaceData & { email: string };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
-  const session = await unstable_getServerSession(req, res, authOptions)
-  if (session) {
-    const productCode = req.query["ProductCode"]
-    const customerIdentifier = req.query["CustomerIdentifier"]
-    const customerAWSAccountId = req.query["CustomerAWSAccountId"]
+  const token = await getToken({ req });
+  // check if token is valid and not expired
+  if (token) {
+    // extract query parameters for aws marketplace metering
+    const productCode = req.query['ProductCode'] as string;
+    const customerIdentifier = req.query['CustomerIdentifier'] as string;
+    const customerAWSAccountId = req.query['CustomerAWSAccountId'] as string;
 
-
+    // check if query parameters are present
     if (productCode && customerIdentifier && customerAWSAccountId) {
-      // await resolveAWSCustomer({ name, message })
-      console.log("save customer information into database")
-      console.log({id: session.user.id, productCode, customerIdentifier, customerAWSAccountId})
-      res.redirect(302, '/')
+      // updates user data with marketplace data
+      await saveCustomer({
+        email: token.email,
+        ProductCode: productCode,
+        CustomerIdentifier: customerIdentifier,
+        CustomerAWSAccountId: customerAWSAccountId,
+      });
+      // redirect to homepage
+      res.redirect(302, '/');
+    } else {
+      res
+        .status(401)
+        .send({
+          error: 'Missing ProductCode or customerIdentifier in request',
+        });
     }
-    else { res.status(500).send({ error: 'Missing ProductCode key in request' }) }
   } else {
-    res.send({
-      error: "You must be signed in to view the protected content on this page.",
-    })
+    res.status(403).send({
+      error:
+        'You must be signed in to view the protected content on this page.',
+    });
   }
 }
+
+const saveCustomer = async (input: userDataWithMarketplace): Promise<void> => {
+  // get PK from GSIPK
+  const getInputs: QueryCommandInput = {
+    TableName: process.env.NEXT_AUTH_DYNAMODB_TABLE,
+    IndexName: process.env.NEXT_AUTH_DYNAMODB_GSI_NAME,
+    KeyConditionExpression: 'GSI1PK = :email',
+    ExpressionAttributeValues: { ':email': { S: `USER#${input.email}` } },
+  };
+  const data = await ddbClient.send(new QueryCommand(getInputs));
+
+  if (data.Items) {
+    const updateInputs: UpdateItemInput = {
+      TableName: process.env.NEXT_AUTH_DYNAMODB_TABLE,
+      Key: {
+        pk: data.Items[0].pk,
+        sk: data.Items[0].sk,
+      },
+      UpdateExpression: 'set marketplace = :m', // For example, "'set Title = :t, Subtitle = :s'"
+      ExpressionAttributeValues: {
+        ':m': {
+          M: {
+            ProductCode: { S: input.ProductCode },
+            CustomerIdentifier: { S: input.CustomerIdentifier },
+            CustomerAWSAccountId: { S: input.CustomerAWSAccountId },
+          },
+        },
+      },
+    };
+    await ddbClient.send(new UpdateItemCommand(updateInputs));
+  }
+};

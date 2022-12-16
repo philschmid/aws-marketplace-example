@@ -1,23 +1,21 @@
 // middleware.ts
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { withAuth } from "next-auth/middleware"
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { withAuth } from 'next-auth/middleware';
 // export { default } from "next-auth/middleware"
-
 
 export default withAuth(
   // `withAuth` augments your `Request` with the user's token.
-  function middleware(request: NextRequest) {
-  },
+  function middleware(request: NextRequest) {},
   {
     callbacks: {
       authorized: ({ req, token }) => {
         // check if token.ex is expired
-        return !!token
+        return !!token;
       },
     },
-  }
-)
+  },
+);
 
 export const config = {
   matcher: [
@@ -30,4 +28,4 @@ export const config = {
      */
     '/((?!api|_next/static|favicon.ico|auth|static).*)',
   ],
-}
+};

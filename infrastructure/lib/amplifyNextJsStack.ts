@@ -5,6 +5,7 @@ import * as amplify from '@aws-cdk/aws-amplify-alpha';
 import { CfnOutput, SecretValue } from 'aws-cdk-lib';
 import * as cr from 'aws-cdk-lib/custom-resources'
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
+import * as iam from 'aws-cdk-lib/aws-iam'
 import { CfnBranch } from 'aws-cdk-lib/aws-amplify'
 
 
@@ -25,18 +26,63 @@ export class AmplifyNextJsStack extends cdk.Stack {
     // Create IAM role for amplify with needed permissions to create the resoruces
     // https://github.com/aws-amplify/amplify-hosting/blob/main/FAQ.md#error-accessdenied-access-denied
 
+    // User Table
+    const table = new dynamodb.Table(this, `NextAuthTable`, {
+      tableName: `${props.name}-user-table`,
+      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+      timeToLiveAttribute: "expires",
+    })
+    const gsiName = "GSI1"
+    table.addGlobalSecondaryIndex({
+      indexName: gsiName,
+      partitionKey: { name: "GSI1PK", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "GSI1SK", type: dynamodb.AttributeType.STRING },
+    })
+    // create iam role for amplify
+    const role = new iam.Role(this, 'AmplifyRole', {
+      assumedBy: new iam.ServicePrincipal('amplify.amazonaws.com'),
+    });
+    // add permissions to write logs
+    role.addToPolicy(new iam.PolicyStatement({
+      actions: ['logs:CreateLogStream', 'logs:CreateLogGroup', 'logs:DescribeLogGroups', 'logs:PutLogEvents'],
+      resources: ['*'],
+    }));
+    // create iam user for amplify credentials since you cannot assign a role to it
+    // https://github.com/aws-amplify/amplify-hosting/issues/3205
+    const amplifyUser = new iam.User(this, 'AmplifyUser')
+    // add permissions to create users in table
+    table.grantReadWriteData(amplifyUser)
+    amplifyUser.addToPolicy(new iam.PolicyStatement({
+      actions: ["aws-marketplace:ResolveCustomer"],
+      resources: ["*"],
+    }))
+    const accessKey = new iam.AccessKey(this, 'AccessKey', { user: amplifyUser });
+    const secretValue = accessKey.secretAccessKey.unsafeUnwrap()
 
+
+    // Default environment variables
+    const environmentVariables = {
+      "AMPLIFY_MONOREPO_APP_ROOT": "app",
+      "AMPLIFY_DIFF_DEPLOY": "false",
+      "NEXT_AUTH_DYNAMODB_TABLE": table.tableName,
+      "NEXT_AUTH_DYNAMODB_GSI_NAME": gsiName,
+      "NEXT_AUTH_AWS_ACCESS_KEY_ID": accessKey.accessKeyId.toString(),
+      "NEXT_AUTH_AWS_SECRET_ACCESS_KEY": secretValue,
+      "NEXT_AUTH_AWS_REGION": this.region,
+    }
 
     // create amplify app
     const amplifyApp = new amplify.App(this, 'NextJsApp', {
       appName: props.name,
+      role,
       sourceCodeProvider: new amplify.GitHubSourceCodeProvider({
         owner: props.githubRepsoitory.split("/")[0],
         repository: props.githubRepsoitory.split("/")[1],
         oauthToken: SecretValue.unsafePlainText(props.githubToken),
       }),
       autoBranchDeletion: true,
-      environmentVariables: { "AMPLIFY_MONOREPO_APP_ROOT": "app", "AMPLIFY_DIFF_DEPLOY": "false" },
+      environmentVariables,
       customRules: [
         {
           source: '/<*>',
@@ -65,6 +111,7 @@ export class AmplifyNextJsStack extends cdk.Stack {
                   commands: [
                     // https://docs.aws.amazon.com/amplify/latest/userguide/ssr-environment-variables.html
                     `env | grep ${Object.keys(props.environmentVariables).map(key => "-e " + key).join(" ")} >> .env.production`,
+                    `env | grep -e NEXT_AUTH_ >> .env.production`,
                     props.customDomain ? `echo "NEXTAUTH_URL=${props.customDomain}"  >> .env.production` : 'echo "NEXTAUTH_URL=https://${AWS_BRANCH}.${AWS_APP_ID}.amplifyapp.com" >> .env.production',
                     "env",
                     "cat .env.production",
@@ -84,7 +131,6 @@ export class AmplifyNextJsStack extends cdk.Stack {
         ]
       }),
     });
-
 
 
     // add branch and environment variables
@@ -133,21 +179,6 @@ export class AmplifyNextJsStack extends cdk.Stack {
       domain.mapSubDomain(main, 'www');
       // domain.mapSubDomain(dev); // sub domain prefix defaults to branch name
     }
-
-    // User Table
-    const table = new dynamodb.Table(this, `NextAuthTable`, {
-      tableName: `${props.name}-user-table`,
-      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
-      sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
-      timeToLiveAttribute: "expires",
-    }).addGlobalSecondaryIndex({
-      indexName: "GSI1",
-      partitionKey: { name: "GSI1PK", type: dynamodb.AttributeType.STRING },
-      sortKey: { name: "GSI1SK", type: dynamodb.AttributeType.STRING },
-    })
-    
-    
-
 
     // Outpus
     new CfnOutput(this, 'appId', {
