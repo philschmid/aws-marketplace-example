@@ -8,6 +8,9 @@ import { GetServerSidePropsContext } from 'next';
 import { getToken } from 'next-auth/jwt';
 import { getUserInformation } from '../lib/dynamoDb';
 import EndpointList from '../components/endpointList';
+import { createContext, useContext, useState } from 'react';
+import { Endpoint } from './api/endpoints';
+import { EndpointProvider } from '../lib/state';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -24,8 +27,10 @@ export default function Home() {
       <main className="container max-w-2xl m-auto mt-4">
         {}
         <h1 className="text-4xl">You are logged in you can create Endpoints</h1>
-        <CreateForm />
-        <EndpointList />
+        <EndpointProvider>
+          <CreateForm />
+          <EndpointList />
+        </EndpointProvider>
       </main>
     </>
   );

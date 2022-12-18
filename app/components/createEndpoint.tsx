@@ -1,5 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
+import { useEndpointContext } from '../lib/state';
 import { createEndpointInput } from '../pages/api/endpoints';
 
 const defaultState = {
@@ -10,7 +11,10 @@ const defaultState = {
 
 export default function CreateForm() {
   const { data: session } = useSession();
+
   const [endpoint, setEndpoint] = useState(defaultState);
+
+  const { endpoints, handleEndpoints } = useEndpointContext();
 
   const onChange = async (
     attribute: keyof typeof defaultState,
@@ -33,6 +37,11 @@ export default function CreateForm() {
       console.error(error);
       alert(error.error);
     }
+    // add endpoint to state
+    const createdEndpoint = await res.json();
+    console.log(createdEndpoint);
+    // @ts-ignore
+    handleEndpoints([...endpoints, createdEndpoint]);
   };
 
   return (
