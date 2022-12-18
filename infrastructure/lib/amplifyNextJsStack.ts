@@ -27,18 +27,27 @@ export class AmplifyNextJsStack extends cdk.Stack {
     // https://github.com/aws-amplify/amplify-hosting/blob/main/FAQ.md#error-accessdenied-access-denied
 
     // User Table
-    const table = new dynamodb.Table(this, `NextAuthTable`, {
+    const userTable = new dynamodb.Table(this, `NextAuthTable`, {
       tableName: `${props.name}-user-table`,
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
       timeToLiveAttribute: "expires",
     })
     const gsiName = "GSI1"
-    table.addGlobalSecondaryIndex({
+    userTable.addGlobalSecondaryIndex({
       indexName: gsiName,
       partitionKey: { name: "GSI1PK", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "GSI1SK", type: dynamodb.AttributeType.STRING },
     })
+
+    // Endpoint Table
+    const endpointTable = new dynamodb.Table(this, `EndpointTable`, {
+      tableName: `${props.name}-endpoint-table`,
+      partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "endpointName", type: dynamodb.AttributeType.STRING },
+      timeToLiveAttribute: "expires",
+    })
+
     // create iam role for amplify
     const role = new iam.Role(this, 'AmplifyRole', {
       assumedBy: new iam.ServicePrincipal('amplify.amazonaws.com'),
@@ -52,7 +61,8 @@ export class AmplifyNextJsStack extends cdk.Stack {
     // https://github.com/aws-amplify/amplify-hosting/issues/3205
     const amplifyUser = new iam.User(this, 'AmplifyUser')
     // add permissions to create users in table
-    table.grantReadWriteData(amplifyUser)
+    userTable.grantReadWriteData(amplifyUser)
+    endpointTable.grantReadWriteData(amplifyUser)
     amplifyUser.addToPolicy(new iam.PolicyStatement({
       actions: ["aws-marketplace:ResolveCustomer"],
       resources: ["*"],
@@ -65,11 +75,12 @@ export class AmplifyNextJsStack extends cdk.Stack {
     const environmentVariables = {
       "AMPLIFY_MONOREPO_APP_ROOT": "app",
       "AMPLIFY_DIFF_DEPLOY": "false",
-      "NEXT_AUTH_DYNAMODB_TABLE": table.tableName,
+      "NEXT_AUTH_DYNAMODB_TABLE": userTable.tableName,
       "NEXT_AUTH_DYNAMODB_GSI_NAME": gsiName,
       "NEXT_AUTH_AWS_ACCESS_KEY_ID": accessKey.accessKeyId.toString(),
       "NEXT_AUTH_AWS_SECRET_ACCESS_KEY": secretValue,
       "NEXT_AUTH_AWS_REGION": this.region,
+      "NEXT_ENDPOINT_DYNAMODB_TABLE": endpointTable.tableName,
     }
 
     // create amplify app

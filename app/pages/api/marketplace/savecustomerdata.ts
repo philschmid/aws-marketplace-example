@@ -2,20 +2,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
 import {
-  DynamoDB,
-  DynamoDBClientConfig,
-  GetItemCommandInput,
-  PutItemCommandInput,
   QueryCommand,
   QueryCommandInput,
   UpdateItemCommand,
   UpdateItemInput,
 } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
-import { GetItemCommand } from '@aws-sdk/client-dynamodb';
-import { config } from '../../../lib/dynamoDb';
+import { ddbClient } from '../../../lib/dynamoDb';
 
-const ddbClient = new DynamoDB(config);
 
 type marketplaceData = {
   ProductCode: string;

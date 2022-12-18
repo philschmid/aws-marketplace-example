@@ -3,11 +3,14 @@ import Image from 'next/image';
 import styles from '../styles/Home.module.css';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { Header } from '../components/header';
+import CreateForm from '../components/createEndpoint';
+import { GetServerSidePropsContext } from 'next';
+import { getToken } from 'next-auth/jwt';
+import { getUserInformation } from '../lib/dynamoDb';
+import EndpointList from '../components/endpointList';
 
 export default function Home() {
   const { data: session, status } = useSession();
-
-  const loading = status === 'loading';
   console.log(session);
   return (
     <>
@@ -19,9 +22,10 @@ export default function Home() {
 
       <Header />
       <main className="container max-w-2xl m-auto mt-4">
-        <h1 className="text-4xl">
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+        {}
+        <h1 className="text-4xl">You are logged in you can create Endpoints</h1>
+        <CreateForm />
+        <EndpointList />
       </main>
     </>
   );
