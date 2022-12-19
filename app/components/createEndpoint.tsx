@@ -20,7 +20,7 @@ export default function CreateForm() {
     setEndpoint(newState);
   };
 
-  const createEndpoint = async (e: any) => {
+  const createEndpoint = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await fetch('/api/endpoints', {
       method: 'POST',
