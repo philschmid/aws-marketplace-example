@@ -39,7 +39,6 @@ export default function CreateForm() {
     }
     // add endpoint to state
     const createdEndpoint = await res.json();
-    console.log(createdEndpoint);
     // @ts-ignore
     handleEndpoints([...endpoints, createdEndpoint]);
   };

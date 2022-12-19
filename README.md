@@ -97,7 +97,7 @@ if (regToken):
   * [x] API to create or connect external accounts
   * [ ] CRUD
     * [ ] add delete endpoint
-    * [ ] add react context for "state" management
+    * [x] add react context for "state" management
 * [ ] Infrastructure
   * [ ] need PRODUCT CODE and SNS ARN to subscribe
   * [x] 3 lambda functions for resolving customer, sns subscriber and usage tracker

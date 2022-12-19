@@ -25,9 +25,6 @@ export type Endpoint = {
 };
 
 export type createEndpointInput = Omit<Endpoint, "createdAt" | "deletedAt">;
-type listEndpointInput = {
-  userId: string;
-}
 
 const createEndpoint = async (input: createEndpointInput, token: JWT): Promise<Endpoint> => {
   const pkId = randomBytes(16).toString("hex")
@@ -48,6 +45,19 @@ const createEndpoint = async (input: createEndpointInput, token: JWT): Promise<E
   return dynamodbInput as Endpoint;
 }
 
+const deleteEndpoint = async (pk: string, token: JWT): Promise<void> => {
+  const data = await ddbClient.send(new UpdateItemCommand({
+    TableName: process.env.NEXT_AUTH_DYNAMODB_TABLE,
+    Key: marshall({ pk: pk, sk: pk }),
+    UpdateExpression: "SET deletedAt = :deletedAt",
+    ExpressionAttributeValues: {
+      ":deletedAt": { S: new Date().toISOString() }
+    },
+    ConditionExpression: "attribute_exists(pk)",
+  }));
+}
+
+
 const listEndpoints = async (token: JWT): Promise<Endpoint[] | undefined> => {
   const data = await ddbClient.send(new QueryCommand({
     TableName: process.env.NEXT_AUTH_DYNAMODB_TABLE,
@@ -56,6 +66,7 @@ const listEndpoints = async (token: JWT): Promise<Endpoint[] | undefined> => {
     ExpressionAttributeValues: {
       ":id": { S: `USER#${token.sub}` }
     },
+    FilterExpression: "attribute_not_exists(deletedAt)"
   }));
   if (data.Items && data.Items.length > 0) {
     return data.Items.map((item) => unmarshall(item) as Endpoint);
@@ -78,12 +89,17 @@ export default async function handler(
 
     switch (req.method) {
       case 'POST':
-        const body = JSON.parse(req.body);
-        const createdEndpoint = await createEndpoint(body, token);
+        const postBody = JSON.parse(req.body);
+        const createdEndpoint = await createEndpoint(postBody, token);
         return res.status(200).json(createdEndpoint)
       case 'GET':
         const endpoints = await listEndpoints(token);
         return res.status(200).json({ endpoints: endpoints })
+      // handle other HTTP methods
+      case 'DELETE':
+        const deleteBody = JSON.parse(req.body);
+        await deleteEndpoint(deleteBody, token);
+        return res.status(200).json({ message: "Endpoint deleted" })
       // handle other HTTP methods
     }
   } catch (error: ConditionalCheckFailedException | any) {

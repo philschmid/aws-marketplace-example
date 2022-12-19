@@ -1,3 +1,4 @@
+import { TrashIcon } from '@heroicons/react/24/solid';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useEndpointContext } from '../lib/state';
@@ -27,6 +28,21 @@ export default function EndpointList() {
     fetchData();
   }, [session]);
 
+  const deleteEndpoint = async (pk: string) => {
+    const res = await fetch('/api/endpoints', {
+      method: 'DELETE',
+      body: JSON.stringify(pk),
+    });
+    if (res.status !== 200) {
+      // @ts-ignore
+      const error = await res.json();
+      console.error(error);
+      alert(error.error);
+    }
+    const newState = endpoints.filter((endpoint: any) => endpoint.pk !== pk);
+    handleEndpoints(newState);
+  };
+
   return endpoints.length > 0 ? (
     <div className="flex flex-col">
       <div className="overflow-x-auto">
@@ -53,6 +69,12 @@ export default function EndpointList() {
                   >
                     Created At
                   </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase "
+                  >
+                    <span>Delete</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -67,6 +89,12 @@ export default function EndpointList() {
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-200 whitespace-nowrap">
                         {endpoint.createdAt}
+                      </td>
+                      <td>
+                        <TrashIcon
+                          onClick={() => deleteEndpoint(endpoint.pk)}
+                          className="h-6 w-6 mx-auto hover:text-red-500 text-red-300 transition duration-200 cursor-pointer"
+                        />
                       </td>
                     </tr>
                   );

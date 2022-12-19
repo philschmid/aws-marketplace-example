@@ -24,7 +24,7 @@ export default function Home() {
       </Head>
 
       <Header />
-      <main className="container max-w-2xl m-auto mt-4">
+      <main className="container max-w-4xl m-auto mt-4">
         {}
         <h1 className="text-4xl">You are logged in you can create Endpoints</h1>
         <EndpointProvider>
