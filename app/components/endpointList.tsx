@@ -18,9 +18,9 @@ export default function EndpointList() {
         console.error(error);
         alert(error.error);
       }
-      const { endpoints } = await res.json();
-      if (endpoints && endpoints.length > 0) {
-        handleEndpoints(endpoints);
+      const response = await res.json();
+      if (response.endpoints && response.endpoints.length > 0) {
+        handleEndpoints(response.endpoints);
       }
     };
 
