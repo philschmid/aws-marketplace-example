@@ -20,7 +20,7 @@ export type Endpoint = {
   repository: string
   accelerator: 'CPU' | 'GPU' | 'TPU';
   createdAt: string;
-  deletedAt: string;
+  deletedAt?: string;
 };
 
 export type createEndpointInput = Omit<Endpoint, "createdAt" | "deletedAt">;
@@ -35,7 +35,6 @@ const createEndpoint = async (input: createEndpointInput): Promise<Endpoint> => 
     TableName: process.env.NEXT_ENDPOINT_DYNAMODB_TABLE,
     Item: marshall(dynamodbInput),
     ConditionExpression: "attribute_not_exists(endpointName)",
-
   }));
   return dynamodbInput as Endpoint;
 }
@@ -53,7 +52,6 @@ const listEndpoints = async (input: listEndpointInput): Promise<Endpoint[] | und
   }
 }
 
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -61,30 +59,27 @@ export default async function handler(
   try {
     const token = await getToken({ req });
     // check if token is valid and not expired
-    if (token) {
-      const requestMethod = req.method;
-      switch (requestMethod) {
-        case 'POST':
-          const body = JSON.parse(req.body);
-          const createdEndpoint = await createEndpoint({ ...body, userId: `USER#${token.email}` });
-          return res.status(200).json(createdEndpoint)
-        case 'GET':
-          const endpoints = await listEndpoints({ userId: `USER#${token.email}` });
-          return res.status(200).json({ endpoints: endpoints })
-        // handle other HTTP methods
-      }
-    }
-    else {
-      res.status(403).send({
+    if (!token) {
+      return res.status(403).send({
         error:
           'You must be signed in to view the protected content on this page.',
       });
-    };
+    }
+
+    switch (req.method) {
+      case 'POST':
+        const body = JSON.parse(req.body);
+        const createdEndpoint = await createEndpoint({ ...body, userId: `USER#${token.email}` });
+        return res.status(200).json(createdEndpoint)
+      case 'GET':
+        const endpoints = await listEndpoints({ userId: `USER#${token.email}` });
+        return res.status(200).json({ endpoints: endpoints })
+      // handle other HTTP methods
+    }
   } catch (error: ConditionalCheckFailedException | any) {
     if (error instanceof ConditionalCheckFailedException) {
       res.status(error.$metadata.httpStatusCode || 400).send({ error: error.message })
     }
     res.status(500).send({ error: error.message })
   }
-
 }
