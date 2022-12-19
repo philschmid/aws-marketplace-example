@@ -25,7 +25,7 @@ export default function EndpointList() {
     };
 
     fetchData();
-  }, [handleEndpoints]);
+  }, [session]);
 
   return endpoints.length > 0 ? (
     <div className="flex flex-col">
