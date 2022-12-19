@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getToken } from 'next-auth/jwt';
+import { getToken, JWT } from 'next-auth/jwt';
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import { randomBytes } from "crypto"
 
 import {
   ConditionalCheckFailedException,
@@ -28,23 +29,32 @@ type listEndpointInput = {
   userId: string;
 }
 
-const createEndpoint = async (input: createEndpointInput): Promise<Endpoint> => {
-  const dynamodbInput = { ...input, createdAt: new Date().toISOString() }
+const createEndpoint = async (input: createEndpointInput, token: JWT): Promise<Endpoint> => {
+  const pkId = randomBytes(16).toString("hex")
+  const dynamodbInput = {
+    ...input,
+    pk: `ENDPOINT#${pkId}`,
+    sk: `ENDPOINT#${pkId}`,
+    GSI1PK: `USER#${token.sub}`,
+    GSI1SK: `ENDPOINT#${pkId}`,
+    createdAt: new Date().toISOString()
+  }
 
   const data = await ddbClient.send(new PutItemCommand({
-    TableName: process.env.NEXT_ENDPOINT_DYNAMODB_TABLE,
+    TableName: process.env.NEXT_AUTH_DYNAMODB_TABLE,
     Item: marshall(dynamodbInput),
     ConditionExpression: "attribute_not_exists(endpointName)",
   }));
   return dynamodbInput as Endpoint;
 }
 
-const listEndpoints = async (input: listEndpointInput): Promise<Endpoint[] | undefined> => {
+const listEndpoints = async (token: JWT): Promise<Endpoint[] | undefined> => {
   const data = await ddbClient.send(new QueryCommand({
-    TableName: process.env.NEXT_ENDPOINT_DYNAMODB_TABLE,
-    KeyConditionExpression: "userId = :id",
+    TableName: process.env.NEXT_AUTH_DYNAMODB_TABLE,
+    IndexName: process.env.NEXT_AUTH_DYNAMODB_GSI_NAME,
+    KeyConditionExpression: "GSI1PK = :id",
     ExpressionAttributeValues: {
-      ":id": { S: input.userId }
+      ":id": { S: `USER#${token.sub}` }
     },
   }));
   if (data.Items && data.Items.length > 0) {
@@ -69,17 +79,17 @@ export default async function handler(
     switch (req.method) {
       case 'POST':
         const body = JSON.parse(req.body);
-        const createdEndpoint = await createEndpoint({ ...body, userId: `USER#${token.email}` });
+        const createdEndpoint = await createEndpoint(body, token);
         return res.status(200).json(createdEndpoint)
       case 'GET':
-        const endpoints = await listEndpoints({ userId: `USER#${token.email}` });
+        const endpoints = await listEndpoints(token);
         return res.status(200).json({ endpoints: endpoints })
       // handle other HTTP methods
     }
   } catch (error: ConditionalCheckFailedException | any) {
     if (error instanceof ConditionalCheckFailedException) {
-      res.status(error.$metadata.httpStatusCode || 400).send({ error: error.message })
+      return res.status(error.$metadata.httpStatusCode || 400).send({ error: error.message })
     }
-    res.status(500).send({ error: error.message })
+    return res.status(500).send({ error: error.message })
   }
 }

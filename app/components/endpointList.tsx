@@ -25,7 +25,7 @@ export default function EndpointList() {
     };
 
     fetchData();
-  }, []);
+  }, [handleEndpoints]);
 
   return endpoints.length > 0 ? (
     <div className="flex flex-col">
@@ -56,19 +56,21 @@ export default function EndpointList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {endpoints.map((endpoint: any) => (
-                  <tr key={endpoint.endpointName}>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-200 whitespace-nowrap">
-                      {endpoint.repository}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-200 whitespace-nowrap">
-                      {endpoint.endpointName}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-200 whitespace-nowrap">
-                      {endpoint.createdAt}
-                    </td>
-                  </tr>
-                ))}
+                {endpoints.map((endpoint: any) => {
+                  return (
+                    <tr key={endpoint.pk}>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-200 whitespace-nowrap">
+                        {endpoint.repository}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-200 whitespace-nowrap">
+                        {endpoint.endpointName}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-200 whitespace-nowrap">
+                        {endpoint.createdAt}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

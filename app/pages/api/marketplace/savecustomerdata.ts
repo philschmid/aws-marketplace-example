@@ -1,13 +1,15 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getToken } from 'next-auth/jwt';
+import { getToken, JWT } from 'next-auth/jwt';
 import {
+  PutItemCommand,
   QueryCommand,
   QueryCommandInput,
   UpdateItemCommand,
   UpdateItemInput,
 } from '@aws-sdk/client-dynamodb';
 import { ddbClient } from '../../../lib/dynamoDb';
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 
 type marketplaceData = {
@@ -15,7 +17,6 @@ type marketplaceData = {
   CustomerIdentifier: string;
   CustomerAWSAccountId: string;
 };
-type userDataWithMarketplace = marketplaceData & { email: string };
 
 export default async function handler(
   req: NextApiRequest,
@@ -33,11 +34,10 @@ export default async function handler(
     if (productCode && customerIdentifier && customerAWSAccountId) {
       // updates user data with marketplace data
       await saveCustomer({
-        email: token.email,
         ProductCode: productCode,
         CustomerIdentifier: customerIdentifier,
         CustomerAWSAccountId: customerAWSAccountId,
-      });
+      }, token);
       // redirect to homepage
       res.redirect(302, '/');
     } else {
@@ -55,34 +55,19 @@ export default async function handler(
   }
 }
 
-const saveCustomer = async (input: userDataWithMarketplace): Promise<void> => {
-  // get PK from GSIPK
-  const getInputs: QueryCommandInput = {
-    TableName: process.env.NEXT_AUTH_DYNAMODB_TABLE,
-    IndexName: process.env.NEXT_AUTH_DYNAMODB_GSI_NAME,
-    KeyConditionExpression: 'GSI1PK = :email',
-    ExpressionAttributeValues: { ':email': { S: `USER#${input.email}` } },
-  };
-  const data = await ddbClient.send(new QueryCommand(getInputs));
-
-  if (data.Items) {
-    const updateInputs: UpdateItemInput = {
-      TableName: process.env.NEXT_AUTH_DYNAMODB_TABLE,
-      Key: {
-        pk: data.Items[0].pk,
-        sk: data.Items[0].sk,
-      },
-      UpdateExpression: 'set marketplace = :m', // For example, "'set Title = :t, Subtitle = :s'"
-      ExpressionAttributeValues: {
-        ':m': {
-          M: {
-            ProductCode: { S: input.ProductCode },
-            CustomerIdentifier: { S: input.CustomerIdentifier },
-            CustomerAWSAccountId: { S: input.CustomerAWSAccountId },
-          },
-        },
-      },
-    };
-    await ddbClient.send(new UpdateItemCommand(updateInputs));
+const saveCustomer = async (input: marketplaceData, token: JWT): Promise<void> => {
+  const dynamodbInput = {
+    ...input,
+    pk: `USER#${token.sub}`,
+    sk: `MARKETPLACE#${input.CustomerIdentifier}`,
+    GSI1PK: `USER#${token.email}`,
+    GSI1SK: `MARKETPLACE#${input.CustomerIdentifier}`,
+    createdAt: new Date().toISOString()
   }
+  // save marketplace information to dynamodb
+  await ddbClient.send(new PutItemCommand({
+    TableName: process.env.NEXT_AUTH_DYNAMODB_TABLE,
+    Item: marshall(dynamodbInput),
+    ConditionExpression: "attribute_not_exists(endpointName)",
+  }));
 };

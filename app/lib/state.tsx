@@ -9,6 +9,7 @@ import {
 import { Endpoint } from '../pages/api/endpoints';
 
 export const EndpointContext = createContext<Endpoint[] | any[]>([]);
+
 export const EndpointProvider = ({ children }: { children: JSX.Element }) => {
   const [endpoints, setEndpoints] = useState([]);
 
