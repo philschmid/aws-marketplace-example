@@ -104,7 +104,7 @@ export default function CreateForm() {
         </div>
         <button
           type="submit"
-          className="px-4 py-2 font-bold text-white bg-blue-500 rounded-lg hover:bg-blue-100 mb-4 mt-7"
+          className="px-4 py-2 font-bold text-white bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-100 mb-4 mt-7"
         >
           Create
         </button>
