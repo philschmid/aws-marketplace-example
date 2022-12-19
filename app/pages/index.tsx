@@ -1,15 +1,8 @@
 import Head from 'next/head';
-import Image from 'next/image';
-import styles from '../styles/Home.module.css';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { Header } from '../components/header';
 import CreateForm from '../components/createEndpoint';
-import { GetServerSidePropsContext } from 'next';
-import { getToken } from 'next-auth/jwt';
-import { getUserInformation } from '../lib/dynamoDb';
 import EndpointList from '../components/endpointList';
-import { createContext, useContext, useState } from 'react';
-import { Endpoint } from './api/endpoints';
 import { EndpointProvider } from '../lib/state';
 
 export default function Home() {

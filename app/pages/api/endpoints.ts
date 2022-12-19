@@ -5,12 +5,9 @@ import { randomBytes } from "crypto"
 
 import {
   ConditionalCheckFailedException,
-  GetItemCommand,
   PutItemCommand,
   QueryCommand,
-  QueryCommandInput,
   UpdateItemCommand,
-  UpdateItemInput,
 } from '@aws-sdk/client-dynamodb';
 import { ddbClient } from '../../lib/dynamoDb';
 

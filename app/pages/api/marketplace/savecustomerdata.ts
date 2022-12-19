@@ -3,10 +3,6 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getToken, JWT } from 'next-auth/jwt';
 import {
   PutItemCommand,
-  QueryCommand,
-  QueryCommandInput,
-  UpdateItemCommand,
-  UpdateItemInput,
 } from '@aws-sdk/client-dynamodb';
 import { ddbClient } from '../../../lib/dynamoDb';
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";

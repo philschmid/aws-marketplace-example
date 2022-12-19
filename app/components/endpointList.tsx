@@ -1,8 +1,8 @@
 import { TrashIcon } from '@heroicons/react/24/solid';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useEndpointContext } from '../lib/state';
-import { createEndpointInput, Endpoint } from '../pages/api/endpoints';
+import { Endpoint } from '../pages/api/endpoints';
 
 const defaultState: Endpoint[] = [];
 

@@ -3,8 +3,6 @@ import GithubProvider from 'next-auth/providers/github';
 import type { NextAuthOptions } from 'next-auth';
 import {
   DynamoDB,
-  DynamoDBClientConfig,
-  ListTablesCommand,
 } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBAdapter } from '@next-auth/dynamodb-adapter';

@@ -1,9 +1,7 @@
 import { getProviders, signIn } from 'next-auth/react';
-import { useRouter } from 'next/router';
 import type { ClientSafeProvider, LiteralUnion } from 'next-auth/react';
 import type { BuiltInProviderType } from 'next-auth/providers';
 import { GetServerSidePropsContext } from 'next';
-import Image from 'next/image';
 
 type marketplaceCustomerProps = {
   ProductCode: string;
