@@ -1,6 +1,8 @@
 # AWS Example: for Saas Product for AWS Marketplace
 
-![overview](assets/overview.png)
+This repository contains a sample SaaS product for AWS Marketplace. It is a simple web application that allows users to create and manage a list "endpoints". The application is built using NextJS and Amplify. The User management is done with Github OAuth and the data is stored in DynamoDB. The application is deployed to AWS using AWS CDK.
+
+![architecture](docs/assets/architecture.png)
 
 ## Steps to create a SaaS product for AWS Marketplace
 
@@ -95,8 +97,8 @@ if (regToken):
   * [x] demo dynamodb save
   * [ ] edge function to resolve customer information
   * [x] API to create or connect external accounts
-  * [ ] CRUD
-    * [ ] add delete endpoint
+  * [x] CRUD
+    * [x] add delete endpoint
     * [x] add react context for "state" management
 * [ ] Infrastructure
   * [ ] need PRODUCT CODE and SNS ARN to subscribe
