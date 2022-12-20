@@ -10,7 +10,6 @@ import * as path from 'path'
 
 
 
-path.dirname(path.basename(__dirname))
 export interface SubscribeConstructeWithLambdaProps {
   name: string
   marketplaceSnsTopic: string;
@@ -28,7 +27,7 @@ export class SubscribeConstructeWithLambda extends Construct {
       queueName: `${props.name}/infrastructure/queue`,
       visibilityTimeout: cdk.Duration.seconds(60),
       retentionPeriod: cdk.Duration.days(7),
-      contentBasedDeduplication: true, 
+      contentBasedDeduplication: true,
       deliveryDelay: cdk.Duration.seconds(10),
     });
     // add queue as subscription to topic

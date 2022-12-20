@@ -4,6 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import { MarketplaceStack, MarketplaceStackProps } from '../lib/marketplaceStack';
 import { AmplifyNextJsStack, AmplifyNextJsStackProps } from '../lib/amplifyNextJsStack';
 import config from '../config'
+import { MarketplacePublisherStack } from '../lib/marketplacePublisherStack';
 
 const props: MarketplaceStackProps = {
   name: 'marketplace-test',
@@ -19,7 +20,7 @@ const props: MarketplaceStackProps = {
 const amplifyProps: AmplifyNextJsStackProps = {
   name: props.name,
   githubRepsoitory: 'philschmid/aws-marketplace-example',
-  githubToken: config.GITHUB_ACCESS_TOKEN ,
+  githubToken: config.GITHUB_ACCESS_TOKEN,
   // customDomain: 'master.d3q7q2q2q2q2q2.amplifyapp.com',
   environmentVariables: {
     NEXTAUTH_SECRET: config.NEXTAUTH_SECRET,
@@ -30,11 +31,18 @@ const amplifyProps: AmplifyNextJsStackProps = {
 
 
 const app = new cdk.App();
+
+// give permission from the Marketplace account to the hosting account
+new MarketplacePublisherStack(app, 'MarketplacePublisherStack', {
+  saasHostingAccountId: 'account id 2',
+  marketplaceSnsTopicArn: props.marketplaceSnsTopic,
+})
+
 // deploy marketplace related Lambda Functions and resources (SQS, SNS, etc)
-// new MarketplaceStack(app, 'MarketplaceStack', {
-//   ...props,
-//   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
-// });
+new MarketplaceStack(app, 'MarketplaceStack', {
+  ...props,
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+});
 
 // deploy NextJS Application with Amplify from GitHub
 new AmplifyNextJsStack(app, 'AmplifyNextJsStack', {

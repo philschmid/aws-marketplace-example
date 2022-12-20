@@ -30,22 +30,23 @@ export class MarketplaceStack extends cdk.Stack {
     // LAMBDA FUNCTIONS
     // 
 
-    // Lambda function to resolve POST Request coming from Marketplace
-    const resolveCustomerLambda = new PythonFunction(this, 'resolveCustomer', {
-      entry: path.resolve(__dirname, '..', 'api'), // required
-      runtime: Runtime.PYTHON_3_8, // required
-      index: 'resolve_customer.py', // optional, defaults to 'index.py'
-    });
-    // Add Policy to Lambda to allow it to resolve customer
-    // https://docs.aws.amazon.com/marketplace/latest/userguide/iam-user-policy-for-aws-marketplace-actions.html
-    const resolveCustomerPolicy = new PolicyStatement({
-      actions: ["aws-marketplace:ResolveCustomer"],
-      resources: ["*"],
-    });
-    resolveCustomerLambda.role?.attachInlinePolicy(new Policy(this, 'resolveCustomerPolicy', {
-      statements: [resolveCustomerPolicy],
-    }),
-    )
+    // Not longer needed is integrated into the NextJS app
+    // // Lambda function to resolve POST Request coming from Marketplace
+    // const resolveCustomerLambda = new PythonFunction(this, 'resolveCustomer', {
+    //   entry: path.resolve(__dirname, '..', 'api'), // required
+    //   runtime: Runtime.PYTHON_3_8, // required
+    //   index: 'resolve_customer.py', // optional, defaults to 'index.py'
+    // });
+    // // Add Policy to Lambda to allow it to resolve customer
+    // // https://docs.aws.amazon.com/marketplace/latest/userguide/iam-user-policy-for-aws-marketplace-actions.html
+    // const resolveCustomerPolicy = new PolicyStatement({
+    //   actions: ["aws-marketplace:ResolveCustomer"],
+    //   resources: ["*"],
+    // });
+    // resolveCustomerLambda.role?.attachInlinePolicy(new Policy(this, 'resolveCustomerPolicy', {
+    //   statements: [resolveCustomerPolicy],
+    // }),
+    // )
 
     // Lambda function to send usage to the Marketplace
     const trackUsageLambda = new PythonFunction(this, 'trackUsage', {
@@ -66,6 +67,7 @@ export class MarketplaceStack extends cdk.Stack {
       statements: [trackUsageLambdaPolicy],
     }),
     )
+    // TODO: add permission to read from DynamoDB table
 
     //  
     // API Gateway
@@ -77,12 +79,6 @@ export class MarketplaceStack extends cdk.Stack {
 
     });
     const marketplaceRoutes = api.root.addResource('marketplace');
-
-    // add /resolve routes for lambda with CORS
-    const resolveCustomer = marketplaceRoutes.addResource('resolve');
-    resolveCustomer.addCorsPreflight({ allowOrigins: ["*"], allowMethods: ["POST"], allowHeaders: ["*"], allowCredentials: true });
-    resolveCustomer.addMethod('POST', new LambdaIntegration(resolveCustomerLambda));
-
     // add /track routes for lambda with CORS
     const trackUsage = marketplaceRoutes.addResource('track');
     trackUsage.addCorsPreflight({ allowOrigins: ["*"], allowMethods: ["POST"], allowHeaders: ["*"], allowCredentials: true });
