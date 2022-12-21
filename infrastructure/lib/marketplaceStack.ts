@@ -2,10 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { SubscribeConstructeWithLambda } from './subscribeSnsTopicQueue';
 import { RestApi, LambdaIntegration, Cors } from 'aws-cdk-lib/aws-apigateway';
-import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as path from 'path';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Code, Runtime, Function } from 'aws-cdk-lib/aws-lambda';
 import { Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 
@@ -30,8 +29,7 @@ export class MarketplaceStack extends cdk.Stack {
     // LAMBDA FUNCTIONS
     // 
 
-    // Not longer needed is integrated into the NextJS app
-    // // Lambda function to resolve POST Request coming from Marketplace
+    // Not longer needed is integrated into the NextJS app    // // Lambda function to resolve POST Request coming from Marketplace
     // const resolveCustomerLambda = new PythonFunction(this, 'resolveCustomer', {
     //   entry: path.resolve(__dirname, '..', 'api'), // required
     //   runtime: Runtime.PYTHON_3_8, // required
@@ -49,14 +47,16 @@ export class MarketplaceStack extends cdk.Stack {
     // )
 
     // Lambda function to send usage to the Marketplace
-    const trackUsageLambda = new PythonFunction(this, 'trackUsage', {
-      entry: path.resolve(__dirname, '..', 'api'), // required
+
+    const trackUsageLambda = new Function(this, 'trackUsage', {
+      code: Code.fromAsset(path.resolve(__dirname, '..', '..', 'api')), // required
       runtime: Runtime.PYTHON_3_8, // required
-      index: 'track_usage.py', // optional, defaults to 'index.py'
+      handler: 'track_usage.handler', // optional, defaults to 'handler'
       environment: {
         'PRODUCT_CODE': props.productCode
       }
     });
+
     // Add Policy to Lambda to allow it to resolve customer
     // https://docs.aws.amazon.com/marketplace/latest/userguide/iam-user-policy-for-aws-marketplace-actions.html
     const trackUsageLambdaPolicy = new PolicyStatement({

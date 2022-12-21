@@ -8,7 +8,7 @@ import { MarketplacePublisherStack } from '../lib/marketplacePublisherStack';
 
 const props: MarketplaceStackProps = {
   name: 'marketplace-test',
-  marketplaceSnsTopic: 'arn:aws:sns:us-east-1:123456789012:MarketplaceTopic',
+  marketplaceSnsTopic: 'arn:aws:sns:us-east-1:907797767998:hugging-face-marketplace-data-feeds',
   productCode: '123456789012'
 }
 
@@ -32,21 +32,30 @@ const amplifyProps: AmplifyNextJsStackProps = {
 
 const app = new cdk.App();
 
-// give permission from the Marketplace account to the hosting account
+// give permission from the Marketplace account to the deploy account
+// AWS_PROFILE must be the for the marketpalce credentials
+/* AWS_PROFILE=hf-marketplace \ 
+AWS_DEFAULT_REGION=us-east-1 \
+DEPLOY_ACCOUNT=558105141721 \
+MARKETPLACE_ACCOUNT=907797767998 \
+cdk bootstrap --trust ${DEPLOY_ACCOUNT} --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess aws://${MARKETPLACE_ACCOUNT}/us-east-1
+*/
+// AWS_PROFILE=hf-sm AWS_DEFAULT_REGION=us-east-1 cdk deploy
 new MarketplacePublisherStack(app, 'MarketplacePublisherStack', {
-  saasHostingAccountId: 'account id 2',
+  saasHostingAccountId: config.AWS_HOSTING_ACCOUNTID,
   marketplaceSnsTopicArn: props.marketplaceSnsTopic,
+  env: { account: config.AWS_MARKETPLACE_PROVIDER_ACCOUNTID, region: process.env.CDK_DEFAULT_REGION },
 })
 
 // deploy marketplace related Lambda Functions and resources (SQS, SNS, etc)
 new MarketplaceStack(app, 'MarketplaceStack', {
   ...props,
-  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  env: { account: config.AWS_HOSTING_ACCOUNTID, region: process.env.CDK_DEFAULT_REGION },
 });
 
 // deploy NextJS Application with Amplify from GitHub
 new AmplifyNextJsStack(app, 'AmplifyNextJsStack', {
   ...amplifyProps,
-  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  env: { account: config.AWS_HOSTING_ACCOUNTID, region: process.env.CDK_DEFAULT_REGION },
 });
 
