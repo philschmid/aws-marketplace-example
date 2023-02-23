@@ -29,12 +29,18 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data | Record<string, string>>,
 ) {
-  console.log(req);
+  let xAmzKey: string | undefined;
 
-  const xAmzKey = req.query['x-amzn-marketplace-token'] as string;
+  if ("x-amzn-marketplace-token" in req.body) {
+    xAmzKey = req.body["x-amzn-marketplace-token"];
+  }
+  if ("x-amzn-marketplace-token" in req.query) {
+    xAmzKey = req.query["x-amzn-marketplace-token"] as string;
+  }
+  console.log(xAmzKey)
+
   if (xAmzKey) {
     // const resolvedCustomer = await resolveAWSCustomer(xAmzKey)
-    console.log('solve marketplace');
     const result = {
       ProductCode: '123456',
       CustomerIdentifier: 'abc',
