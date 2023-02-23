@@ -4,14 +4,17 @@ import { SubscribeConstructeWithLambda } from './subscribeSnsTopicQueue';
 import { RestApi, LambdaIntegration, Cors } from 'aws-cdk-lib/aws-apigateway';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as path from 'path';
+import * as iam from 'aws-cdk-lib/aws-iam'
 import { Code, Runtime, Function } from 'aws-cdk-lib/aws-lambda';
 import { Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
-
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
 
 export interface MarketplaceStackProps extends cdk.StackProps {
   readonly name: string;
   readonly marketplaceSnsTopic: string;
   readonly productCode: string;
+  readonly crossAccountTableRole: iam.Role;
+  readonly crossAccoountTable: dynamodb.Table;
 }
 
 
@@ -22,32 +25,15 @@ export class MarketplaceStack extends cdk.Stack {
     // create SNS Subscribe Pipeline
     const subscribeConstructeWithLambda = new SubscribeConstructeWithLambda(this, 'SubscribeConstructeWithLambda', {
       name: props.name,
-      marketplaceSnsTopic: props.marketplaceSnsTopic
+      marketplaceSnsTopic: props.marketplaceSnsTopic,
+      crossAccountDynamodbRole: props.crossAccountTableRole,
+      crossAccoountTable: props.crossAccoountTable
     });
 
-    //  
-    // LAMBDA FUNCTIONS
-    // 
+    // configure access from provider account to marketplace account to consume provider iam roles for cross account access
 
-    // Not longer needed is integrated into the NextJS app    // // Lambda function to resolve POST Request coming from Marketplace
-    // const resolveCustomerLambda = new PythonFunction(this, 'resolveCustomer', {
-    //   entry: path.resolve(__dirname, '..', 'api'), // required
-    //   runtime: Runtime.PYTHON_3_8, // required
-    //   index: 'resolve_customer.py', // optional, defaults to 'index.py'
-    // });
-    // // Add Policy to Lambda to allow it to resolve customer
-    // // https://docs.aws.amazon.com/marketplace/latest/userguide/iam-user-policy-for-aws-marketplace-actions.html
-    // const resolveCustomerPolicy = new PolicyStatement({
-    //   actions: ["aws-marketplace:ResolveCustomer"],
-    //   resources: ["*"],
-    // });
-    // resolveCustomerLambda.role?.attachInlinePolicy(new Policy(this, 'resolveCustomerPolicy', {
-    //   statements: [resolveCustomerPolicy],
-    // }),
-    // )
 
     // Lambda function to send usage to the Marketplace
-
     const trackUsageLambda = new Function(this, 'trackUsage', {
       code: Code.fromAsset(path.resolve(__dirname, '..', '..', 'api')), // required
       runtime: Runtime.PYTHON_3_8, // required
@@ -67,7 +53,10 @@ export class MarketplaceStack extends cdk.Stack {
       statements: [trackUsageLambdaPolicy],
     }),
     )
-    // TODO: add permission to read from DynamoDB table
+    trackUsageLambda.addToRolePolicy(new iam.PolicyStatement({
+      resources: [props.crossAccountTableRole.roleArn],
+      actions: ['sts:AssumeRole']
+    }));
 
     //  
     // API Gateway

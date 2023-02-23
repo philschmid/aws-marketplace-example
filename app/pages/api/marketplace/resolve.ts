@@ -29,6 +29,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data | Record<string, string>>,
 ) {
+  console.log(req.body);
+
   const xAmzKey = req.query['x-amzn-marketplace-token'] as string;
   if (xAmzKey) {
     // const resolvedCustomer = await resolveAWSCustomer(xAmzKey)

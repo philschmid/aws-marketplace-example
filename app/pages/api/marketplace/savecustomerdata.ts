@@ -12,6 +12,7 @@ type marketplaceData = {
   ProductCode: string;
   CustomerIdentifier: string;
   CustomerAWSAccountId: string;
+  status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'TERMINATED'
 };
 
 export default async function handler(
@@ -33,6 +34,7 @@ export default async function handler(
         ProductCode: productCode,
         CustomerIdentifier: customerIdentifier,
         CustomerAWSAccountId: customerAWSAccountId,
+        status: 'PENDING'
       }, token);
       // redirect to homepage
       res.redirect(302, '/');
@@ -54,8 +56,8 @@ export default async function handler(
 const saveCustomer = async (input: marketplaceData, token: JWT): Promise<void> => {
   const dynamodbInput = {
     ...input,
-    pk: `USER#${token.sub}`,
-    sk: `MARKETPLACE#${input.CustomerIdentifier}`,
+    pk: `MARKETPLACE#${input.CustomerIdentifier}`,
+    sk: `USER#${token.sub}`,
     GSI1PK: `USER#${token.email}`,
     GSI1SK: `MARKETPLACE#${input.CustomerIdentifier}`,
     createdAt: new Date().toISOString()

@@ -16,29 +16,44 @@ export interface AmplifyNextJsStackProps extends cdk.StackProps {
   readonly githubToken: string;
   readonly environmentVariables: { [key: string]: string };
   readonly customDomain?: string,
+  readonly crossAccountId?: string,
 }
 
 
 export class AmplifyNextJsStack extends cdk.Stack {
+  table: dynamodb.Table;
+  crossAccountTableRole: iam.Role;
   constructor(scope: Construct, id: string, props: AmplifyNextJsStackProps) {
     super(scope, id, props);
-
     // Create IAM role for amplify with needed permissions to create the resoruces
     // https://github.com/aws-amplify/amplify-hosting/blob/main/FAQ.md#error-accessdenied-access-denied
 
     // User Table
-    const table = new dynamodb.Table(this, `NextAuthTable`, {
+    this.table = new dynamodb.Table(this, `NextAuthTable`, {
       tableName: `${props.name}-user-table`,
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
       timeToLiveAttribute: "expires",
     })
     const gsiName = "GSI1"
-    table.addGlobalSecondaryIndex({
+    this.table.addGlobalSecondaryIndex({
       indexName: gsiName,
       partitionKey: { name: "GSI1PK", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "GSI1SK", type: dynamodb.AttributeType.STRING },
     })
+
+    // create role for marketplace account lambdas to access dynamodb
+    // https://www.luminis.eu/blog/cloud-en/cross-account-aws-resource-access-with-aws-cdk/
+    this.crossAccountTableRole = new iam.Role(this, 'CrossAccountTableRole', {
+      assumedBy: new iam.AccountPrincipal(props.crossAccountId),
+      roleName: `${props.name}-cross-account-table-role-${props.crossAccountId}`,
+    });
+    // //add statement to allow assumerole action for this account
+    // const assumeStatement = new iam.PolicyStatement();
+    // assumeStatement.addActions('sts:AssumeRole')
+    // this.crossAccountTableRole.addToPrincipalPolicy(assumeStatement);
+    // add permissions to read and write to table
+    this.crossAccountTableRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'))
 
     // create iam role for amplify
     const role = new iam.Role(this, 'AmplifyRole', {
@@ -53,7 +68,7 @@ export class AmplifyNextJsStack extends cdk.Stack {
     // https://github.com/aws-amplify/amplify-hosting/issues/3205
     const amplifyUser = new iam.User(this, 'AmplifyUser')
     // add permissions to create users in table
-    table.grantReadWriteData(amplifyUser)
+    this.table.grantReadWriteData(amplifyUser)
     amplifyUser.addToPolicy(new iam.PolicyStatement({
       actions: ["aws-marketplace:ResolveCustomer"],
       resources: ["*"],
@@ -66,7 +81,7 @@ export class AmplifyNextJsStack extends cdk.Stack {
     const environmentVariables = {
       "AMPLIFY_MONOREPO_APP_ROOT": "app",
       "AMPLIFY_DIFF_DEPLOY": "false",
-      "NEXT_AUTH_DYNAMODB_TABLE": table.tableName,
+      "NEXT_AUTH_DYNAMODB_TABLE": this.table.tableName,
       "NEXT_AUTH_DYNAMODB_GSI_NAME": gsiName,
       "NEXT_AUTH_AWS_ACCESS_KEY_ID": accessKey.accessKeyId.toString(),
       "NEXT_AUTH_AWS_SECRET_ACCESS_KEY": secretValue,
