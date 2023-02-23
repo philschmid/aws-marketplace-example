@@ -22,7 +22,6 @@ def handler(event, context=None):
         customer = {
             "CustomerIdentifier": customerData["CustomerIdentifier"],
             "ProductCode": customerData["ProductCode"],
-            # "CustomerAWSAccountId": customerData["CustomerAWSAccountId"], # not available
         }
 
         query_params = urlencode(customer)

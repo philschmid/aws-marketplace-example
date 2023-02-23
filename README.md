@@ -21,7 +21,6 @@ This repository contains a sample SaaS product for AWS Marketplace. It is a simp
 6. Submit your product for launch
 7. Launch
 
-
 ## Plan your Saas product 
 
 Before you add your SaaS product to AWS Marketplace, you must first do some planning. This step is critical to the success of your product. A lack of planning can result in billing issues or you might have to re-create your product in AWS Marketplace.
@@ -78,15 +77,14 @@ formFields = urlparse.parse_qs(postBody)
 regToken = formFields['x-amzn-marketplace-token']
 
 # If regToken present in POST request, exchange for customerID
-if (regToken):
-    marketplaceClient = boto3.client('meteringmarketplace')
-    customerData = marketplaceClient.resolve_customer(regToken)
-    productCode = customerData['ProductCode']
-    customerID = customerData['CustomerIdentifier']
-    customerAWSAccountId = customerData['CustomerAWSAccountId']
-
-    # TODO: Store customer information 
-    # TODO: Validate no other accounts share the same customerID
+if regToken:
+    marketplaceClient = boto3.client("meteringmarketplace")
+    customerData = marketplaceClient.resolve_customer(RegistrationToken=regToken)
+    print(customerData)
+    customer = {
+        "CustomerIdentifier": customerData["CustomerIdentifier"],
+        "ProductCode": customerData["ProductCode"],
+    }
 ```
 
 
@@ -96,25 +94,6 @@ if (regToken):
 * Create a new dedicated SaaS landing page with support for `x-amzn-marketplace-token` and `ResolveCustomer`
 * Connect existing Account with AWS Marketplace Customer ID (set `canPay` true and save customer information)
 * have a mix between "existing landing page" or "connect". If the customer is not having an account, create a regular one and then connect. 
-
-
-## Tasks 
-
-* [x] Create a new landing page for SaaS registration, which can register via API, e.g. Hugging Face
-  * [x] demo dynamodb save
-  * [ ] edge function to resolve customer information
-  * [x] API to create or connect external accounts
-  * [x] CRUD
-    * [x] add delete endpoint
-    * [x] add react context for "state" management
-* [ ] Infrastructure
-  * [ ] need PRODUCT CODE and SNS ARN to subscribe
-  * [x] 3 lambda functions for resolving customer, sns subscriber and usage tracker
-  * [x] sqs queue to handle sns notifications with Lambda to react to subscription changes
-  * [x] test table to store customer information
-  * [x] endpoint table to store endpoint information
-* [ ] test and playaround on how it could work when registration is broken
-
 
 ## Resources 
 
