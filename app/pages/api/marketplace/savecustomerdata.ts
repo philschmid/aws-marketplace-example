@@ -11,7 +11,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 type marketplaceData = {
   ProductCode: string;
   CustomerIdentifier: string;
-  status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'TERMINATED'
+  status: 'PENDING' | 'ACTIVE' | 'FAILED' | 'TERMINATED'
 };
 
 export default async function handler(

@@ -29,22 +29,18 @@ export default async function handler(
   res: NextApiResponse<Data | Record<string, string>>,
 ) {
   let xAmzKey: string | undefined;
-  xAmzKey = "MGddTwvpZY9RA48y9jxuTfTDOGmWCunjtSPcjStS7U8xTLu87xP1YAN3RrVjvcPtyyuNulhm1YO/tndHwkHeIRInVKocdoCRri81mkcJQ984Sf92qKOPpzFAPheYl0zZzfl/cc+jzaxYvqmPT8C0FmUDzY/9Zi6pTBUFCDqdrB5/5QF92Hw3tg=="
-  // if (req.method !== 'POST') {
-  //   res.status(405).send({ error: 'Method not allowed' });
-  // }
-  // if ("x-amzn-marketplace-token" in req.body) {
-  //   xAmzKey = req.body["x-amzn-marketplace-token"];
-  // }
-  // if ("x-amzn-marketplace-token" in req.query) {
-  //   xAmzKey = req.query["x-amzn-marketplace-token"] as string;
-  // }
-  // console.log(xAmzKey)
-
-
+  if (req.method !== 'POST') {
+    res.status(405).send({ error: 'Method not allowed' });
+  }
+  if ("x-amzn-marketplace-token" in req.body) {
+    xAmzKey = req.body["x-amzn-marketplace-token"];
+  }
+  if ("x-amzn-marketplace-token" in req.query) {
+    xAmzKey = req.query["x-amzn-marketplace-token"] as string;
+  }
+  console.log(xAmzKey)
 
   if (xAmzKey) {
-
     const options = {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
