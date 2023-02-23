@@ -29,7 +29,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data | Record<string, string>>,
 ) {
-  console.log(req.body);
+  console.log(req);
 
   const xAmzKey = req.query['x-amzn-marketplace-token'] as string;
   if (xAmzKey) {
