@@ -2,28 +2,30 @@ import boto3
 from datetime import datetime
 import json
 import os
+from boto3.dynamodb.conditions import Key, Attr
 
 CROSS_ACCOUNT_ROLE = os.environ.get("CROSS_ACCOUNT_ROLE", None)
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", None)
 DYNAMODB_REGION = os.environ.get("DYNAMODB_REGION", "us-east-1")
 
 
-def create_cross_account_danymodb_client():
+def create_cross_account_dyamodb():
     sts_client = boto3.client("sts")
     sts_session = sts_client.assume_role(RoleArn=CROSS_ACCOUNT_ROLE, RoleSessionName="cross-account-dynamodb")
-    return boto3.client(
+    dynamodb = boto3.resource(
         "dynamodb",
         region_name=DYNAMODB_REGION,
         aws_access_key_id=sts_session["Credentials"]["AccessKeyId"],
         aws_secret_access_key=sts_session["Credentials"]["SecretAccessKey"],
         aws_session_token=sts_session["Credentials"]["SessionToken"],
     )
+    return dynamodb.Table(DYNAMODB_TABLE)
 
 
 # https://docs.aws.amazon.com/lambda/latest/dg/with-sqs-example.html
 # {\n  "Type" : "Notification",\n  "MessageId" : "fac5c73a-a549-54ed-a32a-9b4bcf08f882",\n  "TopicArn" : "arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-2qmywxoiv58nm308h0zrd2q0k",\n  "Message" : "{\\n\\"action\\": \\"subscribe-success\\",\\n\\"customer-identifier\\": \\"3yvX23Yyuvm\\",\\n\\"product-code\\": \\"2qmywxoiv58nm308h0zrd2q0k\\",\\n\\"isFreeTrialTermPresent\\": \\"false\\"\\n}
 
-# db_client = create_cross_account_danymodb_client()
+db = create_cross_account_dyamodb()
 
 
 def parse_sqs_message(sqs_message):
@@ -47,8 +49,9 @@ def handler(sqs_message, context):
     print(sqs_message)
     for message in sqs_message:
         # check if user already exists
-        user = db_client.query()
-
+        # TODO:
+        user = db.query(KeyConditionExpression=Key("pk").eq(message["customer-identifier"]))
+        print(user)
         if not user:
             raise Exception("User does not exist")
 
