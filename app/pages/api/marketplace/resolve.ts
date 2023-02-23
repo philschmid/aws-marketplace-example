@@ -12,42 +12,47 @@ import { config } from '../../../lib/dynamoDb';
 type Data = {
   ProductCode: string;
   CustomerIdentifier: string;
-  CustomerAWSAccountId: string;
   error?: string;
 };
 
-// const client = new MarketplaceMeteringClient(config);
+const client = new MarketplaceMeteringClient(config);
 
-// const resolveAWSCustomer = async (xAmzKey: string): Promise<ResolveCustomerCommandOutput> => {
-//   const input: ResolveCustomerRequest = { RegistrationToken: xAmzKey }
-//   const command = new ResolveCustomerCommand(input);
-//   const response = await client.send(command);
-//   return response;
-// }
+const resolveAWSCustomer = async (xAmzKey: string): Promise<ResolveCustomerCommandOutput> => {
+  const input: ResolveCustomerRequest = { RegistrationToken: xAmzKey }
+  const command = new ResolveCustomerCommand(input);
+  const response = await client.send(command);
+  return response;
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data | Record<string, string>>,
 ) {
   let xAmzKey: string | undefined;
-
-  if ("x-amzn-marketplace-token" in req.body) {
-    xAmzKey = req.body["x-amzn-marketplace-token"];
-  }
-  if ("x-amzn-marketplace-token" in req.query) {
-    xAmzKey = req.query["x-amzn-marketplace-token"] as string;
-  }
-  console.log(xAmzKey)
+  xAmzKey = "MGddTwvpZY9RA48y9jxuTfTDOGmWCunjtSPcjStS7U8xTLu87xP1YAN3RrVjvcPtyyuNulhm1YO/tndHwkHeIRInVKocdoCRri81mkcJQ984Sf92qKOPpzFAPheYl0zZzfl/cc+jzaxYvqmPT8C0FmUDzY/9Zi6pTBUFCDqdrB5/5QF92Hw3tg=="
+  // if (req.method !== 'POST') {
+  //   res.status(405).send({ error: 'Method not allowed' });
+  // }
+  // if ("x-amzn-marketplace-token" in req.body) {
+  //   xAmzKey = req.body["x-amzn-marketplace-token"];
+  // }
+  // if ("x-amzn-marketplace-token" in req.query) {
+  //   xAmzKey = req.query["x-amzn-marketplace-token"] as string;
+  // }
+  // console.log(xAmzKey)
 
 
 
   if (xAmzKey) {
-    // const resolvedCustomer = await resolveAWSCustomer(xAmzKey)
-    const result = {
-      ProductCode: '123456',
-      CustomerIdentifier: 'abc',
-      CustomerAWSAccountId: '123456',
+
+    const options = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'x-amzn-marketplace-token': xAmzKey })
     };
+
+    const apiRes = await fetch('https://ip0vhb5ea7.execute-api.us-east-1.amazonaws.com/prod/marketplace/resolve', options);
+    const result = await apiRes.json();
     const awsQueryParameter = new URLSearchParams(result).toString();
 
     // redirect to signin page with query parameters

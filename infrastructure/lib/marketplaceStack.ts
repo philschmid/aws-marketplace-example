@@ -30,8 +30,24 @@ export class MarketplaceStack extends cdk.Stack {
       crossAccoountTable: props.crossAccoountTable
     });
 
-    // configure access from provider account to marketplace account to consume provider iam roles for cross account access
-
+    const resolveCustomerLambda = new Function(this, 'resolveCustomer', {
+      code: Code.fromAsset(path.resolve(__dirname, '..', '..', 'api')), // required
+      runtime: Runtime.PYTHON_3_8, // required
+      handler: 'resolve_customer.handler', // optional, defaults to 'handler'
+      environment: {
+        'REDIRECT_URL': "https://www.google.com"
+      }
+    });
+    // Add Policy to Lambda to allow it to resolve customer
+    // https://docs.aws.amazon.com/marketplace/latest/userguide/iam-user-policy-for-aws-marketplace-actions.html
+    const resolveCustomerPolicy = new PolicyStatement({
+      actions: ["aws-marketplace:ResolveCustomer"],
+      resources: ["*"],
+    });
+    resolveCustomerLambda.role?.attachInlinePolicy(new Policy(this, 'resolveCustomerPolicy', {
+      statements: [resolveCustomerPolicy],
+    }),
+    )
 
     // Lambda function to send usage to the Marketplace
     const trackUsageLambda = new Function(this, 'trackUsage', {
@@ -72,6 +88,10 @@ export class MarketplaceStack extends cdk.Stack {
     const trackUsage = marketplaceRoutes.addResource('track');
     trackUsage.addCorsPreflight({ allowOrigins: ["*"], allowMethods: ["POST"], allowHeaders: ["*"], allowCredentials: true });
     trackUsage.addMethod('POST', new LambdaIntegration(trackUsageLambda));
+    // add /resolve routes for lambda with CORS
+    const resolveCustomer = marketplaceRoutes.addResource('resolve');
+    resolveCustomer.addCorsPreflight({ allowOrigins: ["*"], allowMethods: ["POST"], allowHeaders: ["*"], allowCredentials: true });
+    resolveCustomer.addMethod('POST', new LambdaIntegration(resolveCustomerLambda));
   }
 }
 

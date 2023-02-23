@@ -48,9 +48,7 @@ def handler(sqs_message, context):
     for message in sqs_message:
         # check if user already exists
         user = db_client.query()
-        
-        3yvX23Yyuvm
-        
+
         if not user:
             raise Exception("User does not exist")
 

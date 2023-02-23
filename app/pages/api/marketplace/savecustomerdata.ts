@@ -11,7 +11,6 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 type marketplaceData = {
   ProductCode: string;
   CustomerIdentifier: string;
-  CustomerAWSAccountId: string;
   status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'TERMINATED'
 };
 
@@ -25,15 +24,13 @@ export default async function handler(
     // extract query parameters for aws marketplace metering
     const productCode = req.query['ProductCode'] as string;
     const customerIdentifier = req.query['CustomerIdentifier'] as string;
-    const customerAWSAccountId = req.query['CustomerAWSAccountId'] as string;
 
     // check if query parameters are present
-    if (productCode && customerIdentifier && customerAWSAccountId) {
+    if (productCode && customerIdentifier) {
       // updates user data with marketplace data
       await saveCustomer({
         ProductCode: productCode,
         CustomerIdentifier: customerIdentifier,
-        CustomerAWSAccountId: customerAWSAccountId,
         status: 'PENDING'
       }, token);
       // redirect to homepage

@@ -6,7 +6,6 @@ import { GetServerSidePropsContext } from 'next';
 type marketplaceCustomerProps = {
   ProductCode: string;
   CustomerIdentifier: string;
-  CustomerAWSAccountId: string;
 };
 
 interface SignInProps {
@@ -25,8 +24,7 @@ export default function SignIn({
   let callbackUrl = '/';
   if (
     marketplaceCustomer?.ProductCode &&
-    marketplaceCustomer?.CustomerIdentifier &&
-    marketplaceCustomer?.CustomerAWSAccountId
+    marketplaceCustomer?.CustomerIdentifier
   ) {
     const awsQueryParameter = new URLSearchParams(
       marketplaceCustomer,
