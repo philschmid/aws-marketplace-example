@@ -40,10 +40,8 @@ def parse_sqs_message(sqs_message):
 
 
 def handler(sqs_message, context):
-    # print("sqs_message", sqs_message)
-    # print("body", sqs_message["Records"][0]["body"])
-    body = json.loads(sqs_message["Records"][0]["body"])
-    # print("body parsed", body)
+    # body = json.loads(sqs_message["Records"][0]["body"])
+    print("sqs_message", sqs_message)
     # print("message", json.loads(body["Message"]))
 
     sqs_message = parse_sqs_message(sqs_message)
@@ -61,11 +59,10 @@ def handler(sqs_message, context):
             user["status"] = "ACTIVE"
         elif message["action"] == "subscribe-failure":
             user["status"] = "FAILED"
+        elif message["action"] == "unsubscribe-pending":
+            user["status"] = "INACTIVE"
         elif message["action"] == "unsubscribe-success":
             user["status"] = "TERMINATED"
-        elif message["action"] == "unsubscribe-failure":
-            print(f"unsubscribe for user {user['pk']} failed")
-
         # update user status
         db.put_item(Item=user)
 
