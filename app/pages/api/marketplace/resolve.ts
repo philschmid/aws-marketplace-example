@@ -39,6 +39,8 @@ export default async function handler(
   }
   console.log(xAmzKey)
 
+
+
   if (xAmzKey) {
     // const resolvedCustomer = await resolveAWSCustomer(xAmzKey)
     const result = {
