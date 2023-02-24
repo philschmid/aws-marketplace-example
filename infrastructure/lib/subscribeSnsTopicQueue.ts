@@ -31,7 +31,7 @@ export class SubscribeConstructeWithLambda extends Construct {
     const queue = new sqs.Queue(this, 'InfrastructureQueue', {
       queueName: `${props.name}-infrastructure-queue`,
       visibilityTimeout: cdk.Duration.seconds(60),
-      retentionPeriod: cdk.Duration.days(7),
+      retentionPeriod: cdk.Duration.days(1),
       deliveryDelay: cdk.Duration.seconds(10),
     });
     // add queue as subscription to topic

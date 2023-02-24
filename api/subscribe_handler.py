@@ -27,8 +27,6 @@ def create_cross_account_dyamodb():
 # https://docs.aws.amazon.com/lambda/latest/dg/with-sqs-example.html
 # {\n  "Type" : "Notification",\n  "MessageId" : "fac5c73a-a549-54ed-a32a-9b4bcf08f882",\n  "TopicArn" : "arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-2qmywxoiv58nm308h0zrd2q0k",\n  "Message" : "{\\n\\"action\\": \\"subscribe-success\\",\\n\\"customer-identifier\\": \\"3yvX23Yyuvm\\",\\n\\"product-code\\": \\"2qmywxoiv58nm308h0zrd2q0k\\",\\n\\"isFreeTrialTermPresent\\": \\"false\\"\\n}
 
-db = create_cross_account_dyamodb()
-
 
 def parse_sqs_message(sqs_message):
     parsed_list_of_messages = []
@@ -40,6 +38,7 @@ def parse_sqs_message(sqs_message):
 
 
 def handler(sqs_message, context):
+    db = create_cross_account_dyamodb()
     # body = json.loads(sqs_message["Records"][0]["body"])
     print("sqs_message", sqs_message)
     # print("message", json.loads(body["Message"]))
